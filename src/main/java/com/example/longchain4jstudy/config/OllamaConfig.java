@@ -1,7 +1,9 @@
 package com.example.longchain4jstudy.config;
 
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +13,7 @@ import java.time.Duration;
 /**
  * Ollama配置类
  * 用于配置LongChain4j与本地Ollama服务的连接
- * 
+ *
  * @author 菩提树下的杨过
  * @version 1.0.0
  */
@@ -29,15 +31,28 @@ public class OllamaConfig {
 
     /**
      * 配置Ollama聊天模型
-     * 
+     *
      * @return ChatLanguageModel实例
      */
     @Bean
-    public ChatModel chatLanguageModel() {
+    public ChatModel chatModel() {
         return OllamaChatModel.builder()
                 .baseUrl(ollamaBaseUrl)
                 .modelName(ollamaModel)
                 .timeout(Duration.ofSeconds(timeoutSeconds))
+                .logRequests(true)
+                .logResponses(true)
+                .build();
+    }
+
+    @Bean
+    public StreamingChatModel streamingChatModel() {
+        return OllamaStreamingChatModel.builder()
+                .baseUrl(ollamaBaseUrl)
+                .modelName(ollamaModel)
+                .timeout(Duration.ofSeconds(timeoutSeconds))
+                .logRequests(true)
+                .logResponses(true)
                 .build();
     }
 } 
