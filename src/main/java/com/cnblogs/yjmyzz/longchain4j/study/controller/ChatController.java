@@ -1,4 +1,4 @@
-package com.example.longchain4jstudy.controller;
+package com.cnblogs.yjmyzz.longchain4j.study.controller;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;

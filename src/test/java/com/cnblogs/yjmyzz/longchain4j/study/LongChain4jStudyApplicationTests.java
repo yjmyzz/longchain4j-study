@@ -1,4 +1,4 @@
-package com.example.longchain4jstudy;
+package com.cnblogs.yjmyzz.longchain4j.study;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

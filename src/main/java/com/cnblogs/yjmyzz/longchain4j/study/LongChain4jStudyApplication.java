@@ -1,4 +1,4 @@
-package com.example.longchain4jstudy;
+package com.cnblogs.yjmyzz.longchain4j.study;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
