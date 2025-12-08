@@ -48,7 +48,6 @@ public class ExtractDataController {
             "2018年10月30日，在香港逝世，享年94岁。
             """;
 
-
     @GetMapping(value = "/extract", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> extract() {
         try {
@@ -63,10 +62,33 @@ public class ExtractDataController {
         }
     }
 
+    /**
+     * Person 记录类，用于表示一个人的基本信息
+     * 使用 Java record 类型实现，自动生成构造函数、getter 方法、equals()、hashCode() 和 toString() 方法
+     *
+     * @param name      人的姓名
+     * @param age       人的年龄
+     * @param birthDay  人的出生日期
+     * @param isAlive   人是否仍然活着
+     * @param deathDate 人的死亡日期（如果已故）
+     * @param degree    人的学位
+     */
     record Person(String name, int age, Date birthDay, boolean isAlive, Date deathDate, String degree) {
+        // 这是一个记录类声明，包含了表示个人基本信息的数据字段
+        // 所有字段都是 final 的，且自动生成对应的访问器方法
     }
 
+    /**
+     * 人员信息提取接口
+     * 该接口定义了一个从生平介绍中提取人员信息的方法
+     */
     interface PersonExtractor {
+        /**
+         * 从生平介绍中提取人员主要信息
+         *
+         * @param biography 人员的生平介绍文本
+         * @return 包含提取信息的Person对象
+         */
         @SystemMessage("""
                 你的任务是从生平介绍中，提取出该人的主要信息：
                 name[姓名],age[年龄], birthDay[出生日期], isAlive[是否健在], deathDate[死亡日期(如果已逝世)], degree[最高学历]
@@ -74,14 +96,24 @@ public class ExtractDataController {
         Person extractPerson(String biography);
     }
 
+    /**
+     * 处理GET请求，提取人员信息并以JSON格式返回
+     *
+     * @return 返回包含提取的人员信息的ResponseEntity对象
+     */
     @GetMapping(value = "/extract2", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Person> extract2() {
         try {
+            // 创建PersonExtractor实例，使用AiServices和ollamaChatModel
             PersonExtractor personExtractor = AiServices.create(PersonExtractor.class, ollamaChatModel);
+            // 使用TEST_DATA调用extractPerson方法提取人员信息
             Person person = personExtractor.extractPerson(TEST_DATA);
+            // 返回成功响应，包含提取的人员信息
             return ResponseEntity.ok(person);
         } catch (Exception e) {
+            // 捕获异常并记录错误日志
             log.error("extract2", e);
+            // 发生异常时返回默认的Person对象
             return ResponseEntity.ok(new Person("", -1, null, false, null, ""));
         }
     }
