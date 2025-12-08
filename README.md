@@ -1,6 +1,6 @@
-# langchain4j Study - RAG示例
+# langchain4j Study - 结构化数据提取示例
 
-这是一个用于学习langchain4j的Spring Boot项目，集成了本地Ollama服务，演示了RAG（检索增强生成）和Embedding向量存储功能。
+这是一个用于学习langchain4j的Spring Boot项目，集成了本地Ollama服务，演示了如何使用AI从文本中提取结构化数据。
 
 **Package**: `com.cnblogs.yjmyzz.langchain4j.study`
 
@@ -10,10 +10,10 @@
 - **Spring Boot 4.0.0**: 现代化的Spring Boot框架
 - **LangChain4j 1.8.0**: 强大的Java AI框架
 - **Ollama集成**: 支持本地大语言模型（默认使用deepseek-v3.1:671b-cloud）
-- **RAG支持**: 支持检索增强生成（Retrieval-Augmented Generation）
-- **Embedding模型**: 集成Ollama Embedding模型（默认使用nomic-embed-text:latest）
-- **向量存储**: 支持InMemory向量存储和语义搜索
-- **RESTful API**: 提供完整的RAG功能API接口（向量存储、语义搜索、RAG聊天）
+- **结构化数据提取**: 使用AI从非结构化文本中提取结构化信息
+- **Prompt模板**: 支持使用PromptTemplate进行提示词工程
+- **AiServices**: 使用AiServices实现类型安全的数据提取接口
+- **RESTful API**: 提供数据提取功能API接口
 
 ## 📋 前置要求
 
@@ -39,9 +39,6 @@ ollama serve
 ```bash
 # 下载聊天模型（默认模型）
 ollama pull deepseek-v3.1:671b-cloud
-
-# 下载Embedding模型（用于向量化）
-ollama pull nomic-embed-text:latest
 
 # 或者下载其他模型
 ollama pull qwen3:0.6b
@@ -73,46 +70,58 @@ mvn spring-boot:run
 
 ### API接口
 
-#### RAG功能演示
+#### 结构化数据提取功能演示
 
-##### 1. 向量存储（Embedding）
+##### 1. 使用PromptTemplate提取数据（JSON格式）
 
 ```bash
-# 将文本片段转换为向量并存储到内存
-curl "http://localhost:8080/api/rag/embed/memory"
+# 从文本中提取结构化数据，返回JSON格式字符串
+curl "http://localhost:8080/api/extract"
 ```
 
 **功能说明**：
-- 使用Ollama Embedding模型（nomic-embed-text）将文本转换为向量
-- 将文本片段存储到内存向量数据库（InMemoryEmbeddingStore）
-- 示例中包含两个文本片段："I like football." 和 "The weather is good today."
+- 使用 `PromptTemplate` 构建提示词
+- 从人物生平介绍中提取基本信息（姓名、年龄、出生日期、是否健在、死亡日期、最高学历）
+- 返回JSON格式的结构化数据
+- 示例数据：金庸的生平介绍
 
-##### 2. 语义搜索（Query）
+**返回示例**：
+```json
+{
+  "name": "金庸",
+  "age": 94,
+  "birthDay": "1924-03-10",
+  "isAlive": false,
+  "deathDate": "2018-10-30",
+  "degree": "哲学博士"
+}
+```
+
+##### 2. 使用AiServices提取数据（类型安全）
 
 ```bash
-# 根据查询问题在向量数据库中搜索最相关的文本片段
-curl "http://localhost:8080/api/rag/query/memory?query=What%20is%20your%20favourite%20sport?"
+# 使用AiServices从文本中提取结构化数据，返回Java对象
+curl "http://localhost:8080/api/extract2"
 ```
 
 **功能说明**：
-- 将查询问题转换为向量
-- 在向量数据库中进行语义搜索
-- 返回相似度分数和匹配的文本内容
-- 默认查询："What is your favourite sport?"
+- 使用 `AiServices` 创建类型安全的数据提取接口
+- 定义 `PersonExtractor` 接口，使用 `@SystemMessage` 指定系统提示词
+- 返回强类型的 `Person` 对象（Java Record）
+- 自动进行JSON序列化和反序列化
+- 更类型安全，更易于维护
 
-##### 3. RAG聊天（Bot）
-
-```bash
-# 基于RAG的AI聊天，自动检索相关上下文并生成回答
-curl "http://localhost:8080/api/rag/query/bot?query=What%20is%20your%20favourite%20sport?"
+**返回示例**：
+```json
+{
+  "name": "金庸",
+  "age": 94,
+  "birthDay": "1924-03-10T00:00:00.000+00:00",
+  "isAlive": false,
+  "deathDate": "2018-10-30T00:00:00.000+00:00",
+  "degree": "哲学博士"
+}
 ```
-
-**功能说明**：
-- 使用 `EmbeddingStoreContentRetriever` 自动检索相关上下文
-- 将检索到的上下文与用户问题一起发送给AI模型
-- AI基于检索到的上下文生成更准确的回答
-- 支持对话记忆（MessageWindowChatMemory）
-- 演示完整的RAG（检索增强生成）工作流程
 
 ## ⚙️ 配置说明
 
@@ -142,7 +151,6 @@ spring:
 ollama:
   base-url: http://localhost:11434          # Ollama服务地址
   model: deepseek-v3.1:671b-cloud           # 聊天模型名称
-  embedding-model: nomic-embed-text:latest  # Embedding模型名称
   timeout: 60                               # 请求超时时间（秒）
 
 # 应用信息
@@ -150,7 +158,7 @@ info:
   app:
     name: langchain4j Study
     version: 1.0.0
-    description: langchain4j学习项目 - RAG示例
+    description: langchain4j学习项目 - 结构化数据输出
 ```
 
 ## 📁 项目结构
@@ -163,7 +171,7 @@ src/
 │   │   ├── config/
 │   │   │   └── OllamaConfig.java              # Ollama配置类
 │   │   └── controller/
-│   │       └── RAGController.java             # RAG功能控制器
+│   │       └── ExtractDataController.java     # 数据提取功能控制器
 │   └── resources/
 │       └── application.yml                     # 应用配置
 └── test/
@@ -185,37 +193,35 @@ src/
 ### 1. 配置类
 
 #### OllamaConfig.java
-- 配置Ollama聊天模型、流式聊天模型和Embedding模型
-- 支持自定义模型名称、Embedding模型名称、服务地址和超时时间
+- 配置Ollama聊天模型
+- 支持自定义模型名称、服务地址和超时时间
 - 启用请求和响应日志记录
 - 使用 `@Bean` 注解注册为Spring Bean，支持依赖注入
 - Bean名称：
   - `ollamaChatModel` - 聊天模型
-  - `ollamaStreamingChatModel` - 流式聊天模型
-  - `ollamaEmbeddingModel` - Embedding模型
 
 ### 2. 控制器
 
-#### RAGController.java
-- 提供RAG（检索增强生成）功能演示
-- 实现InMemory向量存储功能（`InMemoryEmbeddingStore`）
-- 集成Ollama Embedding模型进行文本向量化
-- 支持语义搜索和相似度匹配
-- 提供三个API接口：
-  - `/api/rag/embed/memory` - 向量存储接口
-  - `/api/rag/query/memory` - 语义搜索接口
-  - `/api/rag/query/bot` - RAG聊天接口
-- 使用 `EmbeddingStoreContentRetriever` 实现内容检索
-- 使用 `AiServices` 构建RAG助手，自动集成检索功能
+#### ExtractDataController.java
+- 提供结构化数据提取功能演示
+- 演示两种数据提取方式：
+  - **方式1**：使用 `PromptTemplate` 构建提示词，返回JSON字符串
+  - **方式2**：使用 `AiServices` 创建类型安全的提取接口，返回Java对象
+- 提供两个API接口：
+  - `/api/extract` - 使用PromptTemplate提取数据（返回JSON字符串）
+  - `/api/extract2` - 使用AiServices提取数据（返回Java对象）
+- 使用 `@SystemMessage` 指定系统提示词
+- 定义 `Person` Record类型用于结构化数据
+- 定义 `PersonExtractor` 接口用于类型安全的数据提取
 - 支持CORS跨域请求
-- 返回相似度分数和匹配文本
+- 示例数据：从金庸的生平介绍中提取人物基本信息
 
 ### 3. 主要依赖
 - **Spring Boot Web**: Web应用支持
 - **Spring Boot Validation**: 数据验证支持
 - **Spring WebFlux**: 响应式编程支持
 - **LangChain4j**: AI框架核心（版本 1.8.0）
-- **LangChain4j Ollama**: Ollama集成（包含聊天模型和Embedding模型支持）
+- **LangChain4j Ollama**: Ollama集成（包含聊天模型支持）
 - **Lombok**: 代码简化工具（可选依赖）
 
 ## 🧪 测试
@@ -234,63 +240,73 @@ mvn test -Dtest=com.cnblogs.yjmyzz.langchain4j.study.LangChain4jStudyApplication
 
 ## 🔧 开发指南
 
-### 添加新的RAG功能
+### 添加新的数据提取功能
 
-1. 在 `RAGController` 中添加新的端点方法
-2. 注入 `OllamaEmbeddingModel` 和 `OllamaChatModel`（已配置为Spring Bean）
-3. 使用 `EmbeddingModel` 将文本转换为向量
-4. 将向量和文本片段存储到 `InMemoryEmbeddingStore`
-5. 使用查询向量进行语义搜索
-6. 返回匹配结果和相似度分数
+#### 方式1：使用PromptTemplate
+
+1. 在 `ExtractDataController` 中添加新的端点方法
+2. 注入 `OllamaChatModel`（已配置为Spring Bean）
+3. 使用 `PromptTemplate.from()` 创建提示词模板
+4. 使用 `apply()` 方法填充模板变量
+5. 调用 `ollamaChatModel.chat()` 获取AI响应
+6. 返回JSON字符串
 
 **示例**：
 ```java
 @Autowired
-@Qualifier("ollamaEmbeddingModel")
-OllamaEmbeddingModel embeddingModel;
+@Qualifier("ollamaChatModel")
+OllamaChatModel ollamaChatModel;
 
-@GetMapping("/search")
-public ResponseEntity<String> semanticSearch(@RequestParam String query) {
+@GetMapping("/extract-custom")
+public ResponseEntity<String> extractCustom(@RequestParam String text) {
     try {
-        EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
+        Prompt prompt = PromptTemplate.from(
+            "请从以下文本中提取信息，以JSON格式输出：{{text}}"
+        ).apply(Map.of("text", text));
         
-        // 添加文本片段
-        TextSegment segment = TextSegment.from("Your text here");
-        Embedding embedding = embeddingModel.embed(segment).content();
-        embeddingStore.add(embedding, segment);
+        String result = ollamaChatModel.chat(prompt.toUserMessage())
+            .aiMessage().text();
         
-        // 语义搜索
-        Embedding queryEmbedding = embeddingModel.embed(query).content();
-        EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
-                .queryEmbedding(queryEmbedding)
-                .maxResults(1)
-                .build();
-        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(request).matches();
-        
-        return ResponseEntity.ok(matches.toString());
+        return ResponseEntity.ok(result);
     } catch (Exception e) {
         return ResponseEntity.ok("{\"error\":\"" + e.getMessage() + "\"}");
     }
 }
 ```
 
-### 实现完整的RAG聊天
+#### 方式2：使用AiServices（推荐）
 
-使用 `AiServices` 和 `EmbeddingStoreContentRetriever` 实现完整的RAG功能：
+1. 定义数据模型（使用Record或Class）
+2. 定义提取接口，使用 `@SystemMessage` 指定系统提示词
+3. 使用 `AiServices.create()` 创建提取器实例
+4. 调用提取方法获取结构化数据
+5. 返回强类型的Java对象
 
+**示例**：
 ```java
-ContentRetriever retriever = EmbeddingStoreContentRetriever.builder()
-        .embeddingStore(embeddingStore)
-        .embeddingModel(embeddingModel)
-        .maxResults(3)      // 最多返回3个相关片段
-        .minScore(0.6)      // 最小相似度分数
-        .build();
+// 定义数据模型
+record Product(String name, double price, String category) {}
 
-Assistant assistant = AiServices.builder(Assistant.class)
-        .chatModel(chatModel)
-        .contentRetriever(retriever)  // 自动集成检索功能
-        .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
-        .build();
+// 定义提取接口
+interface ProductExtractor {
+    @SystemMessage("从商品描述中提取商品信息：name[名称], price[价格], category[类别]")
+    Product extractProduct(String description);
+}
+
+// 使用提取器
+@GetMapping("/extract-product")
+public ResponseEntity<Product> extractProduct(@RequestParam String description) {
+    try {
+        ProductExtractor extractor = AiServices.create(
+            ProductExtractor.class, 
+            ollamaChatModel
+        );
+        Product product = extractor.extractProduct(description);
+        return ResponseEntity.ok(product);
+    } catch (Exception e) {
+        return ResponseEntity.ok(new Product("", 0.0, ""));
+    }
+}
 ```
 
 ### 自定义配置
@@ -299,7 +315,6 @@ Assistant assistant = AiServices.builder(Assistant.class)
 - Ollama服务配置
     - 服务地址（`ollama.base-url`）
     - 聊天模型（`ollama.model`，默认：deepseek-v3.1:671b-cloud）
-    - Embedding模型（`ollama.embedding-model`，默认：nomic-embed-text:latest）
     - 超时时间（`ollama.timeout`，单位：秒）
 - 日志级别和格式
 - 服务器端口（默认8080）
@@ -307,7 +322,7 @@ Assistant assistant = AiServices.builder(Assistant.class)
 **注意**:
 - 日志配置中的package路径为 `com.example.langchain4jstudy`
 - 修改配置后需要重启应用才能生效
-- Embedding模型需要在Ollama中提前下载：`ollama pull nomic-embed-text:latest`
+- 确保使用的聊天模型已在Ollama中下载：`ollama pull deepseek-v3.1:671b-cloud`
 
 ## 🐛 故障排除
 
@@ -319,11 +334,11 @@ Assistant assistant = AiServices.builder(Assistant.class)
     - 验证模型是否已下载：`ollama list`
     - 确认使用的模型名称正确（默认：deepseek-v3.1:671b-cloud）
 
-2. **Embedding模型加载失败**
-   - 确保已在Ollama中下载Embedding模型：`ollama pull nomic-embed-text:latest`
-   - 检查Ollama服务是否正常运行
-   - 验证模型名称是否正确（默认：nomic-embed-text:latest）
-   - 查看日志中的模型加载错误信息
+2. **数据提取结果不准确**
+   - 优化系统提示词（`@SystemMessage`）的描述
+   - 在PromptTemplate中提供更清晰的示例格式
+   - 检查输入文本的质量和完整性
+   - 尝试使用不同的模型（如更大的模型）
 
 3. **模型响应缓慢**
     - 检查硬件资源（CPU、内存）
@@ -334,13 +349,12 @@ Assistant assistant = AiServices.builder(Assistant.class)
 4. **内存不足**
     - 增加JVM堆内存：`-Xmx4g`
     - 使用更小的模型
-    - 减少向量数据库中存储的文本片段数量
+    - 减少处理的文本长度
 
-5. **向量搜索结果不准确**
-    - 调整 `maxResults` 参数获取更多候选结果
-    - 检查相似度分数阈值是否合理
-    - 优化文本预处理和分段策略
-    - 考虑使用更强大的Embedding模型
+5. **JSON解析错误**
+    - 检查AI返回的JSON格式是否正确
+    - 使用 `AiServices` 方式可以自动处理JSON序列化/反序列化
+    - 在PromptTemplate中提供更明确的JSON格式示例
 
 6. **Java 25 兼容性**
     - 项目使用 Java 25，确保已安装 JDK 25
@@ -383,24 +397,41 @@ Assistant assistant = AiServices.builder(Assistant.class)
 - **Lombok**: 作为可选依赖，打包时会被排除
 - 所有日志记录使用标准的 SLF4J Logger
 
-### RAG功能说明
+### 结构化数据提取功能说明
 
-项目演示了如何使用 LangChain4j 实现 RAG（检索增强生成）功能：
+项目演示了如何使用 LangChain4j 从非结构化文本中提取结构化数据：
 
-1. **Embedding模型**: 使用 Ollama Embedding模型（nomic-embed-text）将文本转换为向量
-2. **向量存储**: 使用 `InMemoryEmbeddingStore` 存储文本向量和元数据
-3. **语义搜索**: 根据查询问题的语义相似度检索相关文本片段
-4. **相似度计算**: 返回匹配文本和相似度分数（0-1之间）
-5. **内容检索器**: 使用 `EmbeddingStoreContentRetriever` 自动检索相关上下文
-6. **AI集成**: 使用 `AiServices` 将检索到的上下文与用户问题一起发送给AI模型
-7. **扩展性**: 可以轻松替换为其他向量数据库（如Pinecone、Qdrant、Chroma等）
+1. **PromptTemplate方式**: 使用模板构建提示词，灵活控制输出格式
+   - 支持变量替换和动态内容填充
+   - 可以指定JSON格式示例
+   - 返回JSON字符串，需要手动解析
+
+2. **AiServices方式**: 使用类型安全的接口定义，自动处理数据转换
+   - 定义Java接口和Record类型
+   - 使用 `@SystemMessage` 指定系统提示词
+   - 自动进行JSON序列化和反序列化
+   - 返回强类型的Java对象，更易于使用
+
+3. **应用场景**:
+   - 从简历中提取个人信息
+   - 从产品描述中提取商品信息
+   - 从新闻文章中提取关键信息
+   - 从合同文档中提取条款信息
+   - 任何需要将非结构化文本转换为结构化数据的场景
+
+4. **优势**:
+   - 类型安全：使用Java类型系统保证数据正确性
+   - 易于维护：接口定义清晰，便于扩展
+   - 灵活配置：可以自定义提示词和输出格式
 
 ### 技术架构
 
 - **Spring Boot**: 提供Web服务和依赖注入
 - **LangChain4j**: 提供AI集成能力
+  - `PromptTemplate`: 提示词模板引擎
+  - `AiServices`: 类型安全的AI服务构建器
 - **Ollama**: 提供本地大语言模型服务
-- **Embedding**: 提供文本向量化能力
+- **Java Record**: 用于定义结构化数据模型
 
 ---
 

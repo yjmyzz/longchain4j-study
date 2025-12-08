@@ -15,7 +15,7 @@
     <artifactId>langchain4j-study</artifactId>
     <version>1.0.0</version>
     <name>langchain4j-study</name>
-    <description>langchain4j学习项目 - RAG示例 by 菩提树下的杨过</description>
+    <description>langchain4j学习项目 - 结构化数据输出示例 by 菩提树下的杨过</description>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>

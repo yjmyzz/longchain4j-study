@@ -19,7 +19,6 @@ spring:
 ollama:
   base-url: http://localhost:11434
   model: deepseek-v3.1:671b-cloud
-  embedding-model: nomic-embed-text:latest
   timeout: 60
 
 
@@ -29,4 +28,4 @@ info:
   app:
     name: langchain4j Study
     version: 1.0.0
-    description: langchain4j学习项目 - RAG示例
+    description: langchain4j学习项目 - 结构化数据输出
