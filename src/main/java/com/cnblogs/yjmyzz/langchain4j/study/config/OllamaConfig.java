@@ -27,6 +27,8 @@ public class OllamaConfig {
     @Value("${ollama.model:deepseek-v3.1:671b-cloud}")
     private String ollamaModel;
 
+    @Value("${ollama.embedding-model:nomic-embed-text:latest}")
+    public String embeddingModel;
 
     @Value("${ollama.timeout:60}")
     private Integer timeoutSeconds;
@@ -41,6 +43,17 @@ public class OllamaConfig {
         return OllamaChatModel.builder()
                 .baseUrl(ollamaBaseUrl)
                 .modelName(ollamaModel)
+                .timeout(Duration.ofSeconds(timeoutSeconds))
+                .logRequests(true)
+                .logResponses(true)
+                .build();
+    }
+
+    @Bean("ollamaEmbeddingModel")
+    public OllamaEmbeddingModel embeddingModel() {
+        return OllamaEmbeddingModel.builder()
+                .baseUrl(ollamaBaseUrl)
+                .modelName(embeddingModel)
                 .timeout(Duration.ofSeconds(timeoutSeconds))
                 .logRequests(true)
                 .logResponses(true)
