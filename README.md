@@ -1,6 +1,6 @@
-# langchain4j Study - 文本分类示例
+# langchain4j Study - Chain链式调用示例
 
-这是一个用于学习langchain4j的Spring Boot项目，集成了本地Ollama服务，演示了如何使用AI进行文本分类。项目提供了两种分类方式：基于大语言模型的分类和基于嵌入模型的分类。
+这是一个用于学习langchain4j的Spring Boot项目，集成了本地Ollama服务，演示了如何使用LangChain4j的Chain链式调用功能。项目提供了两种Chain使用方式：对话链（ConversationalChain）和检索增强生成链（ConversationalRetrievalChain）。
 
 **Package**: `com.cnblogs.yjmyzz.langchain4j.study`
 
@@ -12,11 +12,12 @@
 - **Ollama集成**: 支持本地大语言模型和嵌入模型
   - 聊天模型：默认使用 `deepseek-v3.1:671b-cloud`
   - 嵌入模型：默认使用 `nomic-embed-text:latest`
-- **文本分类**: 演示客服问题自动分类功能
-- **两种分类方式**:
-  - **AiServices分类**: 使用大语言模型进行智能分类
-  - **嵌入模型分类**: 使用EmbeddingModelTextClassifier进行基于相似度的分类
-- **RESTful API**: 提供文本分类功能API接口
+- **Chain链式调用**: 演示LangChain4j的链式调用功能
+- **两种Chain方式**:
+  - **ConversationalChain**: 带记忆的对话链，支持多轮对话
+  - **ConversationalRetrievalChain**: RAG检索增强生成链，基于文档知识库回答问题
+- **文档处理**: 支持文档加载、分割和嵌入存储
+- **RESTful API**: 提供Chain功能演示API接口
 
 ## 📋 前置要求
 
@@ -76,77 +77,78 @@ mvn spring-boot:run
 
 ### API接口
 
-#### 文本分类功能演示
+#### Chain链式调用功能演示
 
-项目提供了两种文本分类方式，用于将客服问题自动分类到不同的类别。
+项目提供了两种Chain链式调用方式，用于演示LangChain4j的链式调用功能。
 
-**支持的分类类别**：
-- **产品相关** (PRODUCT): 产品使用、保修、质量问题等
-- **订单相关** (ORDER): 订单查询、配送、物流等
-- **账户相关** (ACCOUNT): 登录、密码、账号管理等
-- **会员相关** (MEMBER): 会员等级、积分、优惠券等
-- **支付相关** (PAYMENT): 支付方式、发票、退款等
-- **其它问题** (OTHERS): 其他未分类问题
-
-##### 1. 使用AiServices进行分类（基于大语言模型）
+##### 1. ConversationalChain - 对话链
 
 ```bash
-# 使用大语言模型进行智能分类
-curl "http://localhost:8080/api/classify?query=能给我发个支付99折优惠券吗"
+# 使用对话链进行多轮对话
+curl "http://localhost:8080/api/chat/chain?query=你好，我是张三"
 ```
 
 **功能说明**：
-- 使用 `AiServices` 创建类型安全的分类接口
-- 定义 `CustomerServiceCategoryClassifier` 接口，使用 `@UserMessage` 指定提示词
-- 基于大语言模型的语义理解能力进行分类
-- 返回分类类别的中文描述
+- 使用 `ConversationalChain` 创建带记忆的对话链
+- 支持多轮对话，自动维护对话上下文
+- 使用 `MessageWindowChatMemory` 管理对话记忆（最多保留10条消息）
+- 适合需要上下文理解的对话场景
 
 **返回示例**：
-```
-支付相关
+```json
+"你好，张三！很高兴认识你。有什么我可以帮助你的吗？"
 ```
 
-**请求示例**：
+**多轮对话示例**：
 ```bash
-# 测试不同的问题
-curl "http://localhost:8080/api/classify?query=我的订单现在到哪里了？"
-# 返回：订单相关
+# 第一轮对话
+curl "http://localhost:8080/api/chat/chain?query=我的名字是李四"
+# 返回：了解，李四，很高兴认识你...
 
-curl "http://localhost:8080/api/classify?query=我的密码过期了？"
-# 返回：账户相关
-
-curl "http://localhost:8080/api/classify?query=产品的保修期过了怎么办？"
-# 返回：产品相关
+# 第二轮对话（会记住之前的对话）
+curl "http://localhost:8080/api/chat/chain?query=我刚才说我的名字是什么？"
+# 返回：你刚才说你的名字是李四...
 ```
 
-##### 2. 使用EmbeddingModelTextClassifier进行分类（基于嵌入模型）
+##### 2. ConversationalRetrievalChain - RAG检索增强生成链
 
 ```bash
-# 使用嵌入模型进行基于相似度的分类
-curl "http://localhost:8080/api/classify/embed?query=能给我发个支付99折优惠券吗"
+# 使用RAG链基于知识库回答问题
+curl "http://localhost:8080/api/rag/chain?query=萧寒星是谁？"
 ```
 
 **功能说明**：
-- 使用 `EmbeddingModelTextClassifier` 进行分类
-- 基于文本嵌入向量的相似度计算
-- 通过示例数据（few-shot learning）进行分类
-- 每个类别都有多个示例问题，通过计算相似度找到最匹配的类别
-- 性能更好，适合大规模分类场景
+- 使用 `ConversationalRetrievalChain` 创建RAG检索增强生成链
+- 基于文档知识库（`data.txt`）进行检索和回答
+- 自动加载文档、分割文本、生成嵌入向量并存储
+- 使用 `EmbeddingStoreContentRetriever` 检索相关内容
+- 结合检索到的内容和对话历史生成回答
+- 适合基于知识库的问答场景
 
 **返回示例**：
-```
-支付相关
+```json
+"萧寒星，号'孤影剑客'，是一位江湖传奇人物。他幼时家族蒙难，唯他幸免，在荒废古墓中偶得前朝遗卷《星陨诀》，自此以残剑独修。他的成名绝技是「寂夜星河」，剑势如流星破空..."
 ```
 
-**优势对比**：
+**知识库问答示例**：
+```bash
+# 询问知识库中的内容
+curl "http://localhost:8080/api/rag/chain?query=萧寒星的绝技是什么？"
+# 返回：萧寒星的成名绝技是「寂夜星河」...
 
-| 特性 | AiServices分类 | EmbeddingModel分类 |
-|------|---------------|-------------------|
-| 分类方式 | 基于大语言模型理解 | 基于向量相似度 |
-| 准确性 | 高（语义理解强） | 较高（依赖示例质量） |
-| 性能 | 较慢（需要完整推理） | 快（向量计算） |
-| 成本 | 较高 | 较低 |
-| 适用场景 | 复杂语义理解 | 大规模批量分类 |
+curl "http://localhost:8080/api/rag/chain?query=萧寒星做过什么大事？"
+# 返回：他曾为救被邪派掳走的医谷圣女苏挽晴，单剑独闯「幽冥教」总坛...
+```
+
+**两种Chain对比**：
+
+| 特性 | ConversationalChain | ConversationalRetrievalChain |
+|------|-------------------|----------------------------|
+| 功能 | 多轮对话 | RAG检索增强生成 |
+| 记忆 | 支持对话记忆 | 支持对话记忆 + 知识库检索 |
+| 数据源 | 仅依赖模型知识 | 基于文档知识库 |
+| 适用场景 | 通用对话、聊天 | 知识问答、文档检索 |
+| 性能 | 较快 | 较慢（需要检索和嵌入计算） |
 
 ## ⚙️ 配置说明
 
@@ -197,9 +199,10 @@ src/
 │   │   ├── config/
 │   │   │   └── OllamaConfig.java              # Ollama配置类
 │   │   └── controller/
-│   │       └── ClassifierController.java      # 文本分类功能控制器
+│   │       └── ChainController.java           # Chain链式调用功能控制器
 │   └── resources/
-│       └── application.yml                     # 应用配置
+│       ├── application.yml                     # 应用配置
+│       └── data.txt                           # RAG知识库文档
 └── test/
     └── java/com/cnblogs/yjmyzz/langchain4j/study/
         └── LangChain4jStudyApplicationTests.java  # 应用测试
@@ -224,26 +227,36 @@ src/
 - 启用请求和响应日志记录
 - 使用 `@Bean` 注解注册为Spring Bean，支持依赖注入
 - Bean名称：
-  - `ollamaChatModel` - 聊天模型（用于AiServices分类）
-  - `ollamaEmbeddingModel` - 嵌入模型（用于EmbeddingModelTextClassifier分类）
+  - `ollamaChatModel` - 聊天模型（用于ConversationalChain和ConversationalRetrievalChain）
+  - `ollamaEmbeddingModel` - 嵌入模型（用于文档嵌入和RAG检索）
 
 ### 2. 控制器
 
-#### ClassifierController.java
-- 提供文本分类功能演示
-- 演示两种分类方式：
-  - **方式1**：使用 `AiServices` 创建类型安全的分类接口，基于大语言模型
-  - **方式2**：使用 `EmbeddingModelTextClassifier` 进行基于嵌入向量的分类
+#### ChainController.java
+- 提供Chain链式调用功能演示
+- 演示两种Chain使用方式：
+  - **ConversationalChain**: 带记忆的对话链，支持多轮对话
+  - **ConversationalRetrievalChain**: RAG检索增强生成链，基于文档知识库回答问题
 - 提供两个API接口：
-  - `/api/classify` - 使用AiServices进行分类（基于大语言模型）
-  - `/api/classify/embed` - 使用EmbeddingModelTextClassifier进行分类（基于嵌入模型）
-- 定义 `CustomerServiceCategory` 枚举类型，包含6个分类类别
-- 定义 `CustomerServiceCategoryClassifier` 接口用于类型安全的分类
-- 使用 `@UserMessage` 指定用户提示词模板
-- 提供 `getExamples()` 方法，为每个类别准备示例问题（few-shot learning）
-- 支持客服问题自动分类场景
+  - `/api/chat/chain` - 使用ConversationalChain进行对话
+  - `/api/rag/chain` - 使用ConversationalRetrievalChain进行RAG问答
+- 文档处理功能：
+  - 使用 `FileSystemDocumentLoader` 加载文档
+  - 使用 `DocumentByLineSplitter` 按行分割文档
+  - 使用 `InMemoryEmbeddingStore` 存储嵌入向量
+  - 自动为文档生成嵌入向量并建立索引
+- 记忆管理：
+  - 使用 `MessageWindowChatMemory` 管理对话记忆
+  - 最多保留10条消息历史
 
-### 3. 主要依赖
+### 3. 知识库文档
+
+#### data.txt
+- RAG知识库文档，包含示例内容
+- 用于演示文档加载、分割和检索功能
+- 可以替换为任何文本文件作为知识库
+
+### 4. 主要依赖
 - **Spring Boot Web**: Web应用支持
 - **Spring Boot Validation**: 数据验证支持
 - **Spring WebFlux**: 响应式编程支持
@@ -267,99 +280,83 @@ mvn test -Dtest=com.cnblogs.yjmyzz.langchain4j.study.LangChain4jStudyApplication
 
 ## 🔧 开发指南
 
-### 添加新的分类功能
+### 添加新的Chain功能
 
-#### 方式1：使用AiServices进行分类（推荐用于复杂语义理解）
+#### 方式1：使用ConversationalChain（推荐用于多轮对话）
 
-1. 定义分类枚举类型（使用Enum）
-2. 定义分类接口，使用 `@UserMessage` 指定提示词模板
-3. 使用 `AiServices.create()` 创建分类器实例
-4. 调用分类方法获取分类结果
-5. 返回分类枚举值
+1. 注入 `OllamaChatModel`
+2. 创建 `MessageWindowChatMemory` 管理对话记忆
+3. 使用 `ConversationalChain.builder()` 构建链
+4. 调用 `execute()` 方法执行对话
 
 **示例**：
 ```java
-// 定义分类枚举
-enum ArticleCategory {
-    TECHNOLOGY("技术"),
-    BUSINESS("商业"),
-    SPORTS("体育");
-    
-    @Getter
-    private final String desc;
-    
-    ArticleCategory(String desc) {
-        this.desc = desc;
-    }
-}
+@Autowired
+@Qualifier("ollamaChatModel")
+OllamaChatModel ollamaChatModel;
 
-// 定义分类接口
-interface ArticleClassifier {
-    @UserMessage("将文章【{{text}}】归类到以下类别：技术、商业、体育")
-    ArticleCategory classify(String text);
-}
-
-// 使用分类器
-@GetMapping("/classify-article")
-public ResponseEntity<String> classifyArticle(@RequestParam String text) {
+@GetMapping("/chat")
+public ResponseEntity<String> chat(@RequestParam String query) {
     try {
-        ArticleClassifier classifier = AiServices.create(
-            ArticleClassifier.class, 
-            ollamaChatModel
-        );
-        ArticleCategory category = classifier.classify(text);
-        return ResponseEntity.ok(category.getDesc());
+        String response = ConversationalChain.builder()
+                .chatModel(ollamaChatModel)
+                .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
+                .build()
+                .execute(query);
+        return ResponseEntity.ok(response);
     } catch (Exception e) {
-        return ResponseEntity.ok("分类错误: " + e.getMessage());
+        return ResponseEntity.ok("错误: " + e.getMessage());
     }
 }
 ```
 
-#### 方式2：使用EmbeddingModelTextClassifier进行分类（推荐用于大规模分类）
+#### 方式2：使用ConversationalRetrievalChain（推荐用于RAG问答）
 
-1. 定义分类枚举类型（使用Enum）
-2. 准备每个类别的示例数据（few-shot learning）
-3. 使用 `EmbeddingModelTextClassifier` 创建分类器
-4. 调用 `classify()` 方法获取分类结果列表
-5. 返回最匹配的分类结果
+1. 准备文档和嵌入存储
+2. 创建 `EmbeddingStoreContentRetriever`
+3. 使用 `ConversationalRetrievalChain.builder()` 构建RAG链
+4. 调用 `execute()` 方法执行问答
 
 **示例**：
 ```java
-// 定义分类枚举
-enum Sentiment {
-    POSITIVE("正面"),
-    NEGATIVE("负面"),
-    NEUTRAL("中性");
-    
-    @Getter
-    private final String desc;
-    
-    Sentiment(String desc) {
-        this.desc = desc;
+@Autowired
+@Qualifier("ollamaChatModel")
+OllamaChatModel ollamaChatModel;
+
+@Autowired
+@Qualifier("ollamaEmbeddingModel")
+OllamaEmbeddingModel ollamaEmbeddingModel;
+
+// 创建嵌入存储
+EmbeddingStore<TextSegment> createEmbeddingStore(String filePath) {
+    EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
+    Document document = FileSystemDocumentLoader.loadDocument(filePath);
+    DocumentByLineSplitter splitter = new DocumentByLineSplitter(100, 0);
+    List<TextSegment> segments = splitter.split(document);
+    for (TextSegment segment : segments) {
+        Embedding embedding = ollamaEmbeddingModel.embed(segment).content();
+        embeddingStore.add(embedding, segment);
     }
+    return embeddingStore;
 }
 
-// 准备示例数据
-Map<Sentiment, List<String>> examples = new HashMap<>();
-examples.put(POSITIVE, asList("太好了", "非常满意", "很棒"));
-examples.put(NEGATIVE, asList("太差了", "不满意", "糟糕"));
-examples.put(NEUTRAL, asList("一般", "还可以", "还行"));
-
-// 使用分类器
-@GetMapping("/classify-sentiment")
-public ResponseEntity<String> classifySentiment(@RequestParam String text) {
+@GetMapping("/rag")
+public ResponseEntity<String> rag(@RequestParam String query) {
     try {
-        TextClassifier<Sentiment> classifier = new EmbeddingModelTextClassifier<>(
-            ollamaEmbeddingModel, 
-            examples
-        );
-        List<Sentiment> results = classifier.classify(text);
-        if (!results.isEmpty()) {
-            return ResponseEntity.ok(results.get(0).getDesc());
-        }
-        return ResponseEntity.ok("无法分类");
+        EmbeddingStore<TextSegment> embeddingStore = createEmbeddingStore("path/to/document.txt");
+        String answer = ConversationalRetrievalChain.builder()
+                .chatModel(ollamaChatModel)
+                .contentRetriever(EmbeddingStoreContentRetriever.builder()
+                        .embeddingModel(ollamaEmbeddingModel)
+                        .embeddingStore(embeddingStore)
+                        .maxResults(3)
+                        .build())
+                .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
+                .build()
+                .execute(query);
+        return ResponseEntity.ok(answer);
     } catch (Exception e) {
-        return ResponseEntity.ok("分类错误: " + e.getMessage());
+        return ResponseEntity.ok("错误: " + e.getMessage());
     }
 }
 ```
@@ -394,29 +391,41 @@ public ResponseEntity<String> classifySentiment(@RequestParam String text) {
       - 聊天模型：`deepseek-v3.1:671b-cloud`
       - 嵌入模型：`nomic-embed-text:latest`
 
-2. **分类结果不准确**
-   - 对于AiServices分类：优化提示词（`@UserMessage`）的描述，提供更清晰的分类规则
-   - 对于EmbeddingModel分类：增加更多高质量的示例数据，确保示例覆盖各种表达方式
-   - 检查输入文本的质量和完整性
-   - 尝试使用不同的模型（如更大的模型）
+2. **RAG检索结果不准确**
+   - 检查知识库文档（`data.txt`）的内容是否完整
+   - 尝试调整文档分割策略（修改 `DocumentByLineSplitter` 的参数）
+   - 增加 `maxResults` 参数以检索更多相关内容
+   - 优化文档内容，确保信息清晰明确
 
-3. **模型响应缓慢**
+3. **对话记忆丢失**
+   - 检查 `MessageWindowChatMemory` 的配置
+   - 确保每次请求使用同一个Chain实例（或共享记忆）
+   - 注意：当前实现每次请求都创建新的Chain，记忆不会跨请求保持
+
+4. **模型响应缓慢**
     - 检查硬件资源（CPU、内存）
     - 考虑使用更小的模型
-    - 调整超时配置
+    - 调整超时配置（`ollama.timeout`）
     - 对于本地模型，考虑使用GPU加速
+    - RAG链需要额外的检索和嵌入计算，响应时间会更长
 
-4. **内存不足**
+5. **内存不足**
     - 增加JVM堆内存：`-Xmx4g`
     - 使用更小的模型
-    - 减少处理的文本长度
+    - 减少文档大小或分割粒度
+    - 考虑使用持久化嵌入存储替代内存存储
 
-5. **嵌入模型加载失败**
+6. **文档加载失败**
+    - 确保 `data.txt` 文件存在于 `src/main/resources/` 目录
+    - 检查文件路径和权限
+    - 验证文件编码为UTF-8
+
+7. **嵌入模型加载失败**
     - 确保已下载嵌入模型：`ollama pull nomic-embed-text:latest`
     - 检查嵌入模型名称配置是否正确
     - 验证Ollama服务是否支持嵌入模型API
 
-6. **Java 25 兼容性**
+8. **Java 25 兼容性**
     - 项目使用 Java 25，确保已安装 JDK 25
     - Maven编译器插件设置为Java 25
     - Lombok为可选依赖，打包时会被排除
@@ -457,49 +466,63 @@ public ResponseEntity<String> classifySentiment(@RequestParam String text) {
 - **Lombok**: 作为可选依赖，打包时会被排除
 - 所有日志记录使用标准的 SLF4J Logger
 
-### 文本分类功能说明
+### Chain链式调用功能说明
 
-项目演示了如何使用 LangChain4j 进行文本分类：
+项目演示了如何使用 LangChain4j 的Chain链式调用功能：
 
-1. **AiServices分类方式**: 使用大语言模型进行智能分类
-   - 定义分类枚举类型和分类接口
-   - 使用 `@UserMessage` 指定提示词模板
-   - 基于大语言模型的语义理解能力
-   - 适合复杂语义理解和少量类别分类
-   - 返回强类型的枚举值
+1. **ConversationalChain**: 带记忆的对话链
+   - 使用 `MessageWindowChatMemory` 管理对话记忆
+   - 支持多轮对话，自动维护上下文
+   - 适合需要上下文理解的对话场景
+   - 简单易用，性能较好
 
-2. **EmbeddingModelTextClassifier方式**: 使用嵌入模型进行基于相似度的分类
-   - 为每个类别准备示例数据（few-shot learning）
-   - 基于文本嵌入向量的相似度计算
-   - 性能更好，适合大规模分类场景
-   - 通过示例数据学习分类模式
-   - 返回分类结果列表（按相似度排序）
+2. **ConversationalRetrievalChain**: RAG检索增强生成链
+   - 基于文档知识库进行检索和回答
+   - 使用 `EmbeddingStoreContentRetriever` 检索相关内容
+   - 结合检索内容和对话历史生成回答
+   - 适合基于知识库的问答场景
+   - 需要文档加载、分割和嵌入计算
 
-3. **应用场景**:
-   - 客服问题自动分类
-   - 邮件分类和路由
-   - 内容审核和分类
-   - 情感分析
-   - 意图识别
-   - 任何需要将文本分类到预定义类别的场景
+3. **文档处理流程**:
+   - 使用 `FileSystemDocumentLoader` 加载文档
+   - 使用 `DocumentByLineSplitter` 分割文档为文本段
+   - 使用 `OllamaEmbeddingModel` 生成嵌入向量
+   - 使用 `InMemoryEmbeddingStore` 存储嵌入向量和文本段
+   - 检索时计算查询与文档的相似度，返回最相关的内容
 
-4. **优势**:
-   - 类型安全：使用Java枚举类型保证分类正确性
-   - 易于维护：接口定义清晰，便于扩展
-   - 灵活配置：可以自定义提示词和示例数据
-   - 两种方式互补：根据场景选择最适合的分类方式
+4. **应用场景**:
+   - 智能客服对话系统
+   - 知识库问答系统
+   - 文档检索和问答
+   - 多轮对话应用
+   - 企业知识管理
+   - 教育培训问答
+
+5. **优势**:
+   - 链式调用：简化AI应用开发流程
+   - 记忆管理：自动维护对话上下文
+   - RAG能力：结合知识库提供准确回答
+   - 易于扩展：可以添加更多Chain组件
+   - 灵活配置：支持自定义记忆、检索器等组件
 
 ### 技术架构
 
 - **Spring Boot**: 提供Web服务和依赖注入
 - **LangChain4j**: 提供AI集成能力
-  - `AiServices`: 类型安全的AI服务构建器，用于大语言模型分类
-  - `EmbeddingModelTextClassifier`: 基于嵌入模型的分类器
+  - `ConversationalChain`: 对话链，支持多轮对话
+  - `ConversationalRetrievalChain`: RAG检索增强生成链
+  - `MessageWindowChatMemory`: 对话记忆管理
+  - `EmbeddingStoreContentRetriever`: 嵌入存储内容检索器
   - `OllamaChatModel`: 聊天模型接口
   - `OllamaEmbeddingModel`: 嵌入模型接口
+  - `FileSystemDocumentLoader`: 文件系统文档加载器
+  - `DocumentByLineSplitter`: 按行分割文档
+  - `InMemoryEmbeddingStore`: 内存嵌入存储
 - **Ollama**: 提供本地大语言模型和嵌入模型服务
-- **Java Enum**: 用于定义分类类别
 
 ---
 
-**注意**: 请确保在使用前已正确安装和配置Ollama服务，并下载所需的模型。
+**注意**: 
+- 请确保在使用前已正确安装和配置Ollama服务，并下载所需的模型
+- RAG功能需要知识库文档（`data.txt`），可以替换为任何文本文件
+- 当前实现每次请求都创建新的Chain实例，对话记忆不会跨请求保持（如需跨请求记忆，需要实现共享记忆机制）

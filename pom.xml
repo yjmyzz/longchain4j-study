@@ -15,7 +15,7 @@
     <artifactId>langchain4j-study</artifactId>
     <version>1.0.0</version>
     <name>langchain4j-study</name>
-    <description>langchain4j学习项目 - 分类示例 by 菩提树下的杨过</description>
+    <description>langchain4j学习项目 - Chain链式调用示例 by 菩提树下的杨过</description>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
