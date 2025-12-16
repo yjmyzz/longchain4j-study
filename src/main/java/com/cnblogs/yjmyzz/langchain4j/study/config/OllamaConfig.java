@@ -1,15 +1,15 @@
 package com.cnblogs.yjmyzz.langchain4j.study.config;
 
+import com.cnblogs.yjmyzz.langchain4j.study.listener.CustomChatModelListener;
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
-import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Ollama配置类
@@ -46,6 +46,7 @@ public class OllamaConfig {
                 .timeout(Duration.ofSeconds(timeoutSeconds))
                 .logRequests(true)
                 .logResponses(true)
+                .listeners(List.of(new CustomChatModelListener()))
                 .build();
     }
 
