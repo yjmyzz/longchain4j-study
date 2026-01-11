@@ -48,7 +48,8 @@ public class OllamaConfig {
                 .timeout(Duration.ofSeconds(timeoutSeconds))
                 .logRequests(true)
                 .logResponses(true)
-//                .listeners(List.of(new CustomChatModelListener()))
+                //加入监听器
+                .listeners(List.of(new CustomChatModelListener()))
                 .build();
     }
 

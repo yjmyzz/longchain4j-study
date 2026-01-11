@@ -15,6 +15,9 @@ import dev.langchain4j.model.output.TokenUsage;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 自定义ChatModelListener（监听器）
+ */
 public class CustomChatModelListener implements ChatModelListener {
     @Override
     public void onRequest(ChatModelRequestContext requestContext) {

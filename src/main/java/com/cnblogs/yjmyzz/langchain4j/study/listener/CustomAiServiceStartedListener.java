@@ -22,7 +22,7 @@ public class CustomAiServiceStartedListener implements AiServiceStartedListener 
         Optional<SystemMessage> systemMessage = event.systemMessage();
         UserMessage userMessage = event.userMessage();
 
-        // The invocationId will be the same for all events related to the same LLM invocation
+        // 所有与同一LLM调用相关的事件，invocationId将保持一致
         UUID invocationId = invocationContext.invocationId();
         String aiServiceInterfaceName = invocationContext.interfaceName();
         String aiServiceMethodName = invocationContext.methodName();

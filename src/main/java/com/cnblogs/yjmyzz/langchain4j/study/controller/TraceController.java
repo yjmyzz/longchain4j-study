@@ -41,10 +41,9 @@ public class TraceController {
     @Lazy
     StreamingChatModel streamingChatModel;
 
-
     /**
      * 演示AIService基本用法
-     *
+     * by 菩提树下的杨过(yjmyzz.cnblogs.com)
      * @param query
      * @return
      */
@@ -68,7 +67,9 @@ public class TraceController {
      * @return
      */
     @GetMapping(value = "/aiservice/2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Poem> demo2(@RequestParam(defaultValue = "请问李清照最广为流传的词是哪一首,请给出这首词全文（以json格式输出，类似{\"author\":\"...\",\"title\":\"...\",\"content\":\"...\"}）？") String query) {
+    public ResponseEntity<Poem> demo2(@RequestParam(defaultValue = """
+            请问李清照最广为流传的词是哪一首,
+            请给出这首词全文（以json格式输出，类似{\"author\":\"...\",\"title\":\"...\",\"content\":\"...\"}）？""") String query) {
         try {
             Poem extract = AiServices.builder(PoemExtractor.class)
                     .chatModel(ollamaChatModel).build()
@@ -116,6 +117,7 @@ public class TraceController {
             ChineseTeacher teacher = AiServices.builder(ChineseTeacher.class)
                     .chatModel(ollamaChatModel)
                     .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
+                    //加入监听器
                     .registerListeners(List.of(new CustomAiServiceStartedListener(), new CustomAiServiceCompletedListener()))
                     .build();
             return ResponseEntity.ok(teacher.chat(query));
