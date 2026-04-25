@@ -1,6 +1,5 @@
 package com.cnblogs.yjmyzz.langchain4j.study.config;
 
-import com.cnblogs.yjmyzz.langchain4j.study.listener.CustomChatModelListener;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
@@ -46,10 +45,8 @@ public class OllamaConfig {
                 .baseUrl(ollamaBaseUrl)
                 .modelName(ollamaModel)
                 .timeout(Duration.ofSeconds(timeoutSeconds))
-                .logRequests(true)
-                .logResponses(true)
-                //加入监听器
-                .listeners(List.of(new CustomChatModelListener()))
+//                .logRequests(true)
+//                .logResponses(true)
                 .build();
     }
 

@@ -22,7 +22,8 @@
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <langchain4j.version>1.8.0</langchain4j.version>
+<!--        <langchain4j.version>1.8.0</langchain4j.version>-->
+        <langchain4j.version>1.13.1-beta23</langchain4j.version>
     </properties>
 
     <dependencies>
@@ -47,16 +48,21 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>
-            <version>${langchain4j.version}</version>
+            <version>1.13.0</version>
         </dependency>
 
         <!-- langchain4j Ollama Integration -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-ollama</artifactId>
-            <version>${langchain4j.version}</version>
+            <version>1.13.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-skills</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
 
         <!-- Spring Boot Test -->
         <dependency>
